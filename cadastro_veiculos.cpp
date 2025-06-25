@@ -19,73 +19,6 @@ struct Local
     string nome;
 };
 
-void exibirMenu();
-void limparBufferEntrada();
-void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais);
-void cadastrarLocal(vector<Local> &locais);
-void listarVeiculos(const vector<Veiculo> &veiculos);
-void listarLocais(const vector<Local> &locais);
-
-int main()
-{
-    setlocale(LC_ALL, "Portuguese");
-
-    vector<Veiculo> veiculos;
-    vector<Local> locais;
-    int escolha;
-
-    cout << "--- Sistema de Gerenciamento de Frota ---" << endl;
-
-    do
-    {
-        exibirMenu();
-        cin >> escolha;
-        limparBufferEntrada();
-
-        switch (escolha)
-        {
-        case 1:
-            cadastrarLocal(locais);
-            break;
-        case 2:
-            cadastrarVeiculo(veiculos, locais);
-            break;
-        case 3:
-            listarLocais(locais);
-            break;
-        case 4:
-            listarVeiculos(veiculos);
-            break;
-        case 5:
-            cout << "\nSaindo do sistema..." << endl;
-            break;
-        default:
-            cerr << "\n❌ Opção inválida! Por favor, tente novamente." << endl;
-            break;
-        }
-        if (escolha != 5)
-        {
-            cout << "\nPressione Enter para continuar...";
-            cin.get();
-        }
-
-    } while (escolha != 5);
-
-    return 0;
-}
-
-void exibirMenu()
-{
-    cout << "\n--- Menu Principal ---" << endl;
-    cout << "1. Cadastrar Novo Local" << endl;
-    cout << "2. Cadastrar Novo Veículo" << endl;
-    cout << "3. Listar Locais Cadastrados" << endl;
-    cout << "4. Listar Veículos Cadastrados" << endl;
-    cout << "5. Sair" << endl;
-    cout << "----------------------" << endl;
-    cout << "Digite sua escolha: ";
-}
-
 void limparBufferEntrada()
 {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -142,9 +75,9 @@ void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
     int statusEscolhido = 0;
     while (statusEscolhido < 1 || statusEscolhido > 2)
     {
-        cout << "Selecione o status do veículo:" << endl;
-        cout << "  1. Disponível" << endl;
-        cout << "  2. Ocupado" << endl;
+        cout << "Selecione o status do veículo:\n";
+        cout << "  1. Disponível\n";
+        cout << "  2. Ocupado\n";
         cout << "Opção: ";
         cin >> statusEscolhido;
         limparBufferEntrada();

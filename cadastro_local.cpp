@@ -6,9 +6,9 @@ using namespace std;
 
 class Local
 {
-    public:
-        string nome;
-        float x, y;
+public:
+    string nome;
+    float x, y;
 
     Local(string nome, float x, float y)
     {
@@ -18,11 +18,10 @@ class Local
     }
 };
 
-
 int main(void)
 {
     int quantidade = 0;
-    vector <Local> locais;
+    vector<Local> locais;
 
     while (true)
     {
@@ -43,7 +42,7 @@ int main(void)
             {
                 if (locais[i].nome == nome)
                 {
-                    cout << "Ja existe esse local" << endl; 
+                    cout << "Ja existe esse local" << endl;
                     existe = true;
                     break; // sai do loop que checa se existe nome igual
                 }
@@ -54,7 +53,6 @@ int main(void)
         {
             continue; // se ja exisir um lugar com o nome, vai ir para a proxima iteração
         }
-        
 
         cout << "Digite o valor x da coordenada: ";
         cin >> x;
@@ -62,11 +60,7 @@ int main(void)
         cin >> y;
         Local novo_local(nome, x, y);
         locais.push_back(novo_local);
-        quantidade ++;
+        quantidade++;
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
-
-
-
 }
-
