@@ -18,7 +18,7 @@ public:
     }
 };
 
-int main(void)
+void criar_local(void)
 {
     int quantidade = 0;
     vector<Local> locais;

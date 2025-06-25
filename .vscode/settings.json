@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "*.py": "python",
-        "limits": "cpp",
-        "vector": "cpp",
-        "xstring": "cpp",
-        "iostream": "cpp"
-    }
-}
