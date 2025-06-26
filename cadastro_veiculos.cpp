@@ -36,13 +36,13 @@ void cadastrarLocal(vector<Local> &locais)
     {
         if (local.nome == novoLocal.nome)
         {
-            cerr << "❌ Erro: O local '" << novoLocal.nome << "' já existe. Cadastro cancelado." << endl;
+            cerr << " Erro: O local '" << novoLocal.nome << "' já existe. Cadastro cancelado." << endl;
             return;
         }
     }
 
     locais.push_back(novoLocal);
-    cout << "\n✅ Local '" << novoLocal.nome << "' cadastrado com sucesso!" << endl;
+    cout << "\n Local '" << novoLocal.nome << "' cadastrado com sucesso!" << endl;
 }
 
 void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
@@ -51,7 +51,7 @@ void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
 
     if (locais.empty())
     {
-        cerr << "❌ Erro: Nenhum local cadastrado. Cadastre um local antes de adicionar um veículo." << endl;
+        cerr << " Erro: Nenhum local cadastrado. Cadastre um local antes de adicionar um veículo." << endl;
         return;
     }
 
@@ -64,7 +64,7 @@ void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
     {
         if (veiculo.placa == novoVeiculo.placa)
         {
-            cerr << "❌ Erro: A placa '" << novoVeiculo.placa << "' já existe. Cadastro cancelado." << endl;
+            cerr << " Erro: A placa '" << novoVeiculo.placa << "' já existe. Cadastro cancelado." << endl;
             return;
         }
     }
@@ -83,7 +83,7 @@ void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
         limparBufferEntrada();
         if (statusEscolhido < 1 || statusEscolhido > 2)
         {
-            cerr << "❌ Opção de status inválida. Tente novamente." << endl;
+            cerr << " Opção de status inválida. Tente novamente." << endl;
         }
     }
 
@@ -119,12 +119,12 @@ void cadastrarVeiculo(vector<Veiculo> &veiculos, const vector<Local> &locais)
 
         if (!localValido)
         {
-            cerr << "❌ Erro: O local '" << novoVeiculo.localAtual << "' não é válido. Tente novamente." << endl;
+            cerr << "Erro: O local '" << novoVeiculo.localAtual << "' não é válido. Tente novamente." << endl;
         }
     }
 
     veiculos.push_back(novoVeiculo);
-    cout << "\n✅ Veículo cadastrado com sucesso!" << endl;
+    cout << "\n Veículo cadastrado com sucesso!" << endl;
 }
 
 void listarVeiculos(const vector<Veiculo> &veiculos)
