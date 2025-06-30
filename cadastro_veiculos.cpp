@@ -6,9 +6,21 @@
 
 using namespace std;
 
-struct Local
+class Local
 {
+private:
     string nome;
+
+public:
+    Local(string nome)
+    {
+        this->nome = nome;
+    }
+
+    string get_nome() const
+    {
+        return this->nome;
+    }
 };
 
 class Veiculo
@@ -46,7 +58,7 @@ private:
 public:
     GerenciadorVeiculos() {}
 
-    void cadastrar_veiculo(const vector<Local> &locais)
+    void cadastrar_veiculo(const vector<Local>& locais)
     {
         cout << "\n--- Cadastro de Novo Veículo ---" << endl;
         if (locais.empty())
@@ -71,10 +83,10 @@ public:
 
         cout << "Digite o modelo: ";
         getline(cin, modelo);
-
+        
         cout << "Digite o status (Disponivel/Ocupado): ";
         getline(cin, status);
-
+        
         cout << "Digite o local atual: ";
         getline(cin, localAtual);
 
@@ -155,8 +167,9 @@ int main()
     setlocale(LC_ALL, "Portuguese");
 
     vector<Local> locais_cadastrados;
-    locais_cadastrados.push_back({"Garagem-A"});
-    locais_cadastrados.push_back({"Patio-B"});
+    locais_cadastrados.push_back(Local("Garagem-A"));
+    locais_cadastrados.push_back(Local("Patio-B"));
+    locais_cadastrados.push_back(Local("Oficina-C"));
 
     GerenciadorVeiculos gerenciador;
 
