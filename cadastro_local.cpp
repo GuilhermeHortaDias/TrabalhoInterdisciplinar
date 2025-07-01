@@ -1,67 +1,54 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <limits>
+#include "cadastro_local.h"
 using namespace std;
 
-class Local
-{
-private:
-    string nome;
-    float x, y;
-
-public:
-    Local(string nome, float x, float y)
+//Cria os metodos da classe local
+Local::Local(string nome, float x, float y)
     {
         this->nome = nome;
         this->x = x;
         this->y = y;
     }
 
-
     // getters
-    string get_nome()
+    string Local::get_nome()
     {
         return nome;
     }
-    float get_x()
+    float Local::get_x()
     {
         return x;
     }
-        float get_y()
+    float Local::get_y()
     {
         return y;
     }
 
 
-    void change_nome(string nome)
+    void Local::change_nome(string nome)
     {
         this->nome = nome;
     }
-    void change_x(float x)
+    void Local::change_x(float x)
     {
         this->x = x;
     }
-    void change_y(float y)
+    void Local::change_y(float y)
     {
         this->y = y;
     }
-};
 
 
 
-class GerenciadorLocais
+//Cria os metodos da classe gerenciadora
+GerenciadorLocais::GerenciadorLocais()
 {
-    public:
-    vector<Local> locais;
-    
-    GerenciadorLocais()
-    {
-        vector<Local> locais;
-    }
+
+}
 
 
-        void deletar_local(string local)
+        void GerenciadorLocais::deletar_local(string local)
         {
             try
                 {
@@ -83,7 +70,7 @@ class GerenciadorLocais
         }
 
 
-        void criar_local(string nome, float x, float y)
+        void GerenciadorLocais::criar_local(string nome, float x, float y)
         {
           Local local(nome, x, y);
           locais.push_back(local);
@@ -91,7 +78,7 @@ class GerenciadorLocais
         }
 
 
-        void listar_locais(void)
+        void GerenciadorLocais::listar_locais(void)
         {
             for (int i = 0; i < locais.size(); i++) // itera por todos os locais no vetor local e printa todos para o usuario.
             {
@@ -100,7 +87,7 @@ class GerenciadorLocais
             }
         }
 
-        void atualizar(string nome_atual, string novo_nome, float x, float y)
+        void GerenciadorLocais::atualizar(string nome_atual, string novo_nome, float x, float y)
         {
             try
                 {
@@ -134,7 +121,8 @@ class GerenciadorLocais
         
 
         }
-};
+
+        
 
 
 
