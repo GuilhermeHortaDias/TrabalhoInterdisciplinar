@@ -170,7 +170,7 @@ int main()
 {
     vector<string> locais = {"Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Curitiba", "Rio Branco", "Maceio", "Macapa", "Manaus", "Salvador", "Fortaleza", "Vitoria", "Goiania", "Sao Luis", "Cuiaba", "Campo Grande", "Belem", "Joao Pessoa", "Recife", "Teresina", "Natal", "Porto Alegre", "Porto Velho", "Boa Vista", "Florianopolis", "Aracaju", "Palmas", "Brasilia"};
     vector<Pedido> pedidos;
-
+    
     GerenciadorPedidos gerenciador;
 
     int opcao;
