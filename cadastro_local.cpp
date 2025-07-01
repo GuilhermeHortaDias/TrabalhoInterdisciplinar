@@ -48,7 +48,7 @@ GerenciadorLocais::GerenciadorLocais()
 }
 
 
-        void GerenciadorLocais::deletar_local(string local)
+        bool GerenciadorLocais::deletar_local(string local)
         {
             try
                 {
@@ -58,7 +58,7 @@ GerenciadorLocais::GerenciadorLocais()
                         {
                             locais.erase(locais.begin() + i);
                             cout << "Removido com sucesso" << endl;
-                            return;
+                            return true;
                         }
                     }
                     throw 404;
@@ -66,70 +66,56 @@ GerenciadorLocais::GerenciadorLocais()
             catch (int error)
             {
                 cout << "Nao foi possivel encontrar a conta para remover" << endl;
+                return false;
             }
         }
 
 
-        void GerenciadorLocais::criar_local(string nome, float x, float y)
+        bool GerenciadorLocais::criar_local(string nome, float x, float y)
         {
+            for (int i = 0; i < locais.size(); i++)
+            {
+                if (nome == locais[i].get_nome())
+                {
+                    cout << "Ja existe um lugar com esse nome" << endl;
+                    return false;
+                }
+            }
           Local local(nome, x, y);
           locais.push_back(local);
           cout << "Local criado com sucesso" << endl;
+          return true;
         }
 
 
-        void GerenciadorLocais::listar_locais(void)
+        bool GerenciadorLocais::listar_locais(void)
         {
             for (int i = 0; i < locais.size(); i++) // itera por todos os locais no vetor local e printa todos para o usuario.
             {
                 cout << "Local: " << locais[i].get_nome() << endl;
                 cout << "Coordenadas: " << locais[i].get_x() << " , " << locais[i].get_y() << endl;
             }
+            return true;
         }
 
-        void GerenciadorLocais::atualizar(string nome_atual, string novo_nome, float x, float y)
+        bool GerenciadorLocais::atualizar(string nome_atual, string novo_nome, float x, float y)
         {
-            try
-                {
-                    for (int i = 0; i < locais.size(); i++)
-                    {
-                        if (nome_atual == locais[i].get_nome() && nome_atual != novo_nome)
-                        {
-                            locais[i].change_nome(novo_nome);
-                            locais[i].change_x(x);
-                            locais[i].change_y(y);
-                            return;
-                        }
-                        else if (nome_atual != novo_nome)
-                        {
-                            throw 505;
-                        }
-                    }
-                    throw 404;
-                }
-            catch (int num)
-            {
-                if (num == 404)
-                    {
-                        cout << "Nao foi possivel encontrar o local" << endl;
-                    }
-                else
-                {
+            // Verifica se já existe outro local com o novo nome
+            for (int i = 0; i < locais.size(); i++) {
+                if (locais[i].get_nome() == novo_nome && nome_atual != novo_nome) {
                     cout << "Esse local ja existe" << endl;
+                    return false;
                 }
             }
-        
-
+            // Procura o local a ser atualizado
+            for (int i = 0; i < locais.size(); i++) {
+                if (locais[i].get_nome() == nome_atual) {
+                    locais[i].change_nome(novo_nome);
+                    locais[i].change_x(x);
+                    locais[i].change_y(y);
+                    return true;
+                }
+            }
+            cout << "Nao foi possivel encontrar o local" << endl;
+            return false;
         }
-
-        
-
-
-
-int main(void)
-{
-    GerenciadorLocais gerenciador;
-    gerenciador.criar_local("teste", 10.3, 9.0);
-    gerenciador.listar_locais();
-
-}

@@ -24,8 +24,8 @@ class GerenciadorLocais
     public:
         vector<Local> locais;
         GerenciadorLocais();
-        void deletar_local(string local);
-        void criar_local(string nome, float x, float y);
-        void listar_locais(void);
-        void atualizar(string nome_atual, string novo_nome, float x, float y);
+        bool deletar_local(string local);
+        bool criar_local(string nome, float x, float y);
+        bool listar_locais(void);
+        bool atualizar(string nome_atual, string novo_nome, float x, float y);
 };
