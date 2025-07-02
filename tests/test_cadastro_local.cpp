@@ -1,68 +1,59 @@
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 #include "../headers/cadastro_local.h"
-#define CATCH_CONFIG_MAIN
+#include <fstream>
+#include <cstdio> // Para remove()
 
-// testando cadastro novo
-TEST_CASE("Cadastro com nome único") {
-    GerenciadorLocais g;
-    REQUIRE(g.criar_local("Loja A", 10.5, 5.2));
-    REQUIRE(g.locais.size() == 1);
-    REQUIRE(g.locais[0].get_nome() == "Loja A");
+// Função auxiliar para limpar o arquivo de dados antes de cada teste
+void limpar_arquivo_locais() {
+    remove("locais.dat");
 }
 
-TEST_CASE("Cadastro com nome duplicado") {
-    GerenciadorLocais g;
-    REQUIRE(g.criar_local("Loja A", 10.5, 5.2));
-    REQUIRE_FALSE(g.criar_local("Loja A", 12.0, 6.0));
-    REQUIRE(g.locais.size() == 1);
-}
-// testando listagem
-TEST_CASE("Listagem com locais cadastrados") {
-    GerenciadorLocais g;
-    g.criar_local("Loja A", 10.5, 5.2);
-    g.criar_local("Centro", 1.0, 2.0);
-    REQUIRE(g.locais.size() == 2);
-    REQUIRE(g.locais[0].get_nome() == "Loja A");
-    REQUIRE(g.locais[1].get_nome() == "Centro");
-}
+TEST_CASE("Testes do Gerenciador de Locais com Arquivos Binarios") {
+    GerenciadorLocais gl;
 
-TEST_CASE("Listagem sem locais") {
-    GerenciadorLocais g;
-    REQUIRE(g.locais.empty());
-}
+    SECTION("Criar e Listar Locais") {
+        limpar_arquivo_locais();
+        REQUIRE(gl.criar_local("Garagem", 0, 0));
+        REQUIRE(gl.criar_local("Cliente A", 10, 20));
 
-// testando atualização de locais
-TEST_CASE("Atualizar local existente") {
-    GerenciadorLocais g;
-    g.criar_local("Loja A", 10.5, 5.2);
-    REQUIRE(g.atualizar("Loja A", "Loja B", 15.0, 8.0));
-    REQUIRE(g.locais[0].get_nome() == "Loja B");
-    REQUIRE(g.locais[0].get_x() == Approx(15.0));
-    REQUIRE(g.locais[0].get_y() == Approx(8.0));
-}
+        // Verifica se a criação de local duplicado falha
+        REQUIRE_FALSE(gl.criar_local("Garagem", 1, 1));
 
-TEST_CASE("Atualizar local inexistente") {
-    GerenciadorLocais g;
-    REQUIRE_FALSE(g.atualizar("Loja X", "Loja Y", 1.0, 2.0));
-}
+        vector<Local> locais = gl.get_todos_locais();
+        REQUIRE(locais.size() == 2);
+        REQUIRE(locais[0].get_nome() == "Garagem");
+        REQUIRE(locais[1].get_nome() == "Cliente A");
+    }
 
-TEST_CASE("Atualizar com nome já existente") {
-    GerenciadorLocais g;
-    g.criar_local("Loja A", 10.5, 5.2);
-    g.criar_local("Centro", 1.0, 2.0);
-    REQUIRE_FALSE(g.atualizar("Loja A", "Centro", 3.0, 4.0));
-}
+    SECTION("Atualizar Local") {
+        limpar_arquivo_locais();
+        gl.criar_local("Ponto Antigo", 5, 5);
 
+        // Atualiza com sucesso
+        REQUIRE(gl.atualizar("Ponto Antigo", "Ponto Novo", 15, 15));
 
-// testando remoção de locais
-TEST_CASE("Remover local existente") {
-    GerenciadorLocais g;
-    g.criar_local("Loja A", 10.5, 5.2);
-    REQUIRE(g.deletar_local("Loja A"));
-    REQUIRE(g.locais.empty());
-}
+        vector<Local> locais = gl.get_todos_locais();
+        REQUIRE(locais.size() == 1);
+        REQUIRE(locais[0].get_nome() == "Ponto Novo");
+        REQUIRE(locais[0].get_x() == 15);
 
-TEST_CASE("Remover local inexistente") {
-    GerenciadorLocais g;
-    REQUIRE_FALSE(g.deletar_local("Inexistente"));
+        // Tenta atualizar local que não existe
+        REQUIRE_FALSE(gl.atualizar("Ponto Inexistente", "Qualquer", 0, 0));
+    }
+
+    SECTION("Deletar Local") {
+        limpar_arquivo_locais();
+        gl.criar_local("Para Deletar", 1, 1);
+        gl.criar_local("Para Manter", 2, 2);
+
+        REQUIRE(gl.deletar_local("Para Deletar"));
+
+        vector<Local> locais = gl.get_todos_locais();
+        REQUIRE(locais.size() == 1);
+        REQUIRE(locais[0].get_nome() == "Para Manter");
+
+        // Tenta deletar local que não existe
+        REQUIRE_FALSE(gl.deletar_local("Para Deletar"));
+    }
 }

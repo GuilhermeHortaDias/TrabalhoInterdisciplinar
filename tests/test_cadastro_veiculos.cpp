@@ -3,96 +3,59 @@
 
 #include "catch.hpp"
 #include "../headers/cadastro_veiculos.h"
-#include "../headers/cadastro_local.h"
-#include <sstream> // NECESSÁRIO para simular cin/cout
-#include <iostream>
+#include <fstream>
+#include <cstdio>
 
-// --- Testes para Cadastro de Veículos ---
-
-TEST_CASE("Cadastro de veiculo") {
-    GerenciadorVeiculos gv;
-    GerenciadorLocais gl;
-    gl.criar_local("Garagem", 1.0, 1.0); // Pré-condição: precisa de um local
-
-    SECTION("Cadastro bem-sucedido com placa unica") {
-        // Simula a entrada do usuário via teclado (placa, tipo, status, local)
-        std::stringstream input_simulado;
-        input_simulado << "ABC-1234\n";
-        input_simulado << "Ford Ka\n";
-        input_simulado << "Disponivel\n";
-        input_simulado << "Garagem\n";
-
-        // Redireciona o 'cin' para ler do nosso texto simulado
-        std::streambuf* cin_original = std::cin.rdbuf();
-        std::cin.rdbuf(input_simulado.rdbuf());
-
-        // Captura a saída do 'cout' para verificar a mensagem
-        std::stringstream output_capturado;
-        std::streambuf* cout_original = std::cout.rdbuf();
-        std::cout.rdbuf(output_capturado.rdbuf());
-
-        // CHAMA A SUA FUNÇÃO REAL
-        gv.cadastrar_veiculo(gl.locais);
-
-        // Restaura o cin e cout originais
-        std::cin.rdbuf(cin_original);
-        std::cout.rdbuf(cout_original);
-
-        // Verifica se a mensagem de sucesso foi impressa
-        REQUIRE(output_capturado.str().find("Veiculo cadastrado com sucesso!") != std::string::npos);
-    }
-
-    SECTION("Cadastro com placa duplicada deve falhar") {
-        // Primeiro, cadastra um veículo normalmente
-        std::stringstream input1;
-        input1 << "DEF-5678\nCarro\nDisponivel\nGaragem\n";
-        std::streambuf* cin_orig = std::cin.rdbuf();
-        std::cin.rdbuf(input1.rdbuf());
-        gv.cadastrar_veiculo(gl.locais);
-        std::cin.rdbuf(cin_orig); // Restaura
-
-        // Agora, tenta cadastrar de novo com a mesma placa
-        std::stringstream input2;
-        input2 << "DEF-5678\nMoto\nOcupado\nGaragem\n";
-        std::cin.rdbuf(input2.rdbuf());
-
-        std::stringstream output_capturado;
-        std::streambuf* cout_orig = std::cout.rdbuf();
-        std::cout.rdbuf(output_capturado.rdbuf());
-
-        gv.cadastrar_veiculo(gl.locais);
-
-        std::cin.rdbuf(cin_orig);
-        std::cout.rdbuf(cout_orig);
-
-        REQUIRE(output_capturado.str().find("ERRO: Veiculo com esta placa ja existe.") != std::string::npos);
-    }
+// Função auxiliar para limpar o arquivo de dados antes de cada teste
+void limpar_arquivo_veiculos() {
+    remove("veiculos.dat");
 }
 
-
-// --- Testes para Remoção de Veículos ---
-
-TEST_CASE("Remocao de veiculo") {
+TEST_CASE("Testes do Gerenciador de Veiculos com Arquivos Binarios") {
     GerenciadorVeiculos gv;
-    GerenciadorLocais gl;
-    gl.criar_local("Garagem", 1.0, 1.0);
 
-    // Cadastra um veículo para poder remover depois
-    std::stringstream input_cadastro;
-    input_cadastro << "XYZ-9876\nVan\nOcupado\nGaragem\n";
-    std::streambuf* cin_orig = std::cin.rdbuf();
-    std::cin.rdbuf(input_cadastro.rdbuf());
-    gv.cadastrar_veiculo(gl.locais);
-    std::cin.rdbuf(cin_orig);
+    SECTION("Criar e Listar Veiculos") {
+        limpar_arquivo_veiculos();
+        REQUIRE(gv.criar_veiculo("Caminhao", "ABC-1234", 5000.0));
+        REQUIRE(gv.criar_veiculo("Van", "DEF-5678", 1500.0));
 
-    SECTION("Remover veiculo existente") {
-        std::stringstream output_capturado;
-        std::streambuf* cout_orig = std::cout.rdbuf();
-        std::cout.rdbuf(output_capturado.rdbuf());
+        // Verifica se a criação de veiculo com placa duplicada falha
+        REQUIRE_FALSE(gv.criar_veiculo("Carro", "ABC-1234", 800.0));
 
-        gv.deletar_veiculo("XYZ-9876");
+        vector<Veiculo> veiculos = gv.get_todos_veiculos();
+        REQUIRE(veiculos.size() == 2);
+        REQUIRE(veiculos[0].get_placa() == "ABC-1234");
+        REQUIRE(veiculos[1].get_placa() == "DEF-5678");
+    }
 
-        std::cout.rdbuf(cout_orig);
-        REQUIRE(output_capturado.str().find("Veiculo deletado com sucesso!") != std::string::npos);
+    SECTION("Atualizar Veiculo") {
+        limpar_arquivo_veiculos();
+        gv.criar_veiculo("Moto", "GHI-9012", 150.0);
+
+        // Atualiza com sucesso
+        REQUIRE(gv.atualizar_veiculo("GHI-9012", "Motocicleta", "GHI-9012", 180.0));
+
+        Veiculo v = gv.get_veiculo_by_placa("GHI-9012");
+        REQUIRE(v.is_ativo());
+        REQUIRE(v.get_tipo() == "Motocicleta");
+        REQUIRE(v.get_capacidade() == 180.0f);
+
+        // Tenta atualizar veiculo que não existe
+        REQUIRE_FALSE(gv.atualizar_veiculo("XYZ-0000", "Inexistente", "XYZ-0000", 100));
+    }
+
+    SECTION("Deletar Veiculo") {
+        limpar_arquivo_veiculos();
+        gv.criar_veiculo("Para Deletar", "DEL-0001", 100);
+        gv.criar_veiculo("Para Manter", "MAN-0002", 200);
+
+        REQUIRE(gv.deletar_veiculo("DEL-0001"));
+
+        vector<Veiculo> veiculos = gv.get_todos_veiculos();
+        REQUIRE(veiculos.size() == 1);
+        REQUIRE(veiculos[0].get_placa() == "MAN-0002");
+
+        // Tenta deletar veiculo que não existe
+        REQUIRE_FALSE(gv.deletar_veiculo("DEL-0001"));
     }
 }

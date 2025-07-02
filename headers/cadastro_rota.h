@@ -55,4 +55,5 @@ public:
     void gerar_rotas();
     void listar_rotas();
     void limpar_rotas_antigas();
+    vector<Rota> get_todas_rotas(); // Adicionado para testabilidade
 };

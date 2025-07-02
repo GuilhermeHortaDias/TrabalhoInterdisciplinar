@@ -215,3 +215,20 @@ void GerenciadorRotas::listar_rotas() {
         cout << "Nenhuma rota gerada ou salva." << endl;
     }
 }
+
+vector<Rota> GerenciadorRotas::get_todas_rotas() {
+    vector<Rota> rotas_ativas;
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        return rotas_ativas;
+    }
+
+    Rota rota_lida;
+    while (arquivo.read(reinterpret_cast<char*>(&rota_lida), sizeof(Rota))) {
+        if (rota_lida.is_ativa()) {
+            rotas_ativas.push_back(rota_lida);
+        }
+    }
+
+    return rotas_ativas;
+}
