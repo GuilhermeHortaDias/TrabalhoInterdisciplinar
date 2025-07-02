@@ -4,6 +4,9 @@
 #include <locale.h>
 #include <windows.h>
 #include "../headers/cadastro_veiculos.h"
+#include <fstream>
+#include <vector>
+#include <cstring>
 
 using namespace std;
 
@@ -23,7 +26,161 @@ void Veiculo::change_modelo(string novo_modelo) { this->modelo = novo_modelo; }
 void Veiculo::change_status(string novo_status) { this->status = novo_status; }
 void Veiculo::change_localAtual(string novo_local) { this->localAtual = novo_local; }
 
-GerenciadorVeiculos::GerenciadorVeiculos() {}
+GerenciadorVeiculos::GerenciadorVeiculos() {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        ofstream novoArquivo(nomeArquivo, ios::binary);
+        novoArquivo.close();
+    }
+}
+
+int GerenciadorVeiculos::encontrar_pos_veiculo(const string& placa) {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) return -1;
+
+    Veiculo veiculo_lido;
+    int pos = 0;
+    while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
+        if (veiculo_lido.is_ativo() && veiculo_lido.get_placa() == placa) {
+            return pos;
+        }
+        pos++;
+    }
+    return -1;
+}
+
+bool GerenciadorVeiculos::criar_veiculo(const string& tipo, const string& placa, float capacidade) {
+    if (encontrar_pos_veiculo(placa) != -1) {
+        cout << "Erro: Já existe um veículo com esta placa." << endl;
+        return false;
+    }
+
+    Veiculo novo_veiculo(tipo, placa, capacidade);
+    ofstream arquivo(nomeArquivo, ios::binary | ios::app);
+    if (!arquivo) {
+        cout << "Erro ao abrir o arquivo para escrita." << endl;
+        return false;
+    }
+
+    arquivo.write(reinterpret_cast<const char*>(&novo_veiculo), sizeof(Veiculo));
+    cout << "Veículo criado com sucesso!" << endl;
+    return true;
+}
+
+bool GerenciadorVeiculos::deletar_veiculo(const string& placa) {
+    int pos = encontrar_pos_veiculo(placa);
+    if (pos == -1) {
+        cout << "Erro: Veículo não encontrado." << endl;
+        return false;
+    }
+
+    fstream arquivo(nomeArquivo, ios::binary | ios::in | ios::out);
+    if (!arquivo) {
+        cout << "Erro ao abrir o arquivo." << endl;
+        return false;
+    }
+
+    arquivo.seekg(pos * sizeof(Veiculo));
+    Veiculo veiculo_a_deletar;
+    arquivo.read(reinterpret_cast<char*>(&veiculo_a_deletar), sizeof(Veiculo));
+
+    veiculo_a_deletar.desativar();
+
+    arquivo.seekp(pos * sizeof(Veiculo));
+    arquivo.write(reinterpret_cast<const char*>(&veiculo_a_deletar), sizeof(Veiculo));
+
+    cout << "Veículo deletado com sucesso!" << endl;
+    return true;
+}
+
+void GerenciadorVeiculos::listar_veiculos() {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        cout << "Nenhum veículo cadastrado." << endl;
+        return;
+    }
+
+    Veiculo veiculo_lido;
+    bool encontrou = false;
+    cout << "\n--- Lista de Veículos ---" << endl;
+    while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
+        if (veiculo_lido.is_ativo()) {
+            cout << "Tipo: " << veiculo_lido.get_tipo()
+                 << ", Placa: " << veiculo_lido.get_placa()
+                 << ", Capacidade: " << veiculo_lido.get_capacidade() << endl;
+            encontrou = true;
+        }
+    }
+
+    if (!encontrou) {
+        cout << "Nenhum veículo ativo cadastrado." << endl;
+    }
+    cout << "-------------------------" << endl;
+}
+
+bool GerenciadorVeiculos::atualizar_veiculo(const string& placa_atual, const string& novo_tipo, const string& nova_placa, float nova_capacidade) {
+    int pos = encontrar_pos_veiculo(placa_atual);
+    if (pos == -1) {
+        cout << "Erro: Veículo a ser atualizado não encontrado." << endl;
+        return false;
+    }
+
+    int pos_novo = encontrar_pos_veiculo(nova_placa);
+    if (pos_novo != -1 && pos_novo != pos) {
+        cout << "Erro: Já existe outro veículo com a nova placa." << endl;
+        return false;
+    }
+
+    fstream arquivo(nomeArquivo, ios::binary | ios::in | ios::out);
+    if (!arquivo) {
+        cout << "Erro ao abrir o arquivo." << endl;
+        return false;
+    }
+
+    arquivo.seekg(pos * sizeof(Veiculo));
+    Veiculo veiculo_a_atualizar;
+    arquivo.read(reinterpret_cast<char*>(&veiculo_a_atualizar), sizeof(Veiculo));
+
+    veiculo_a_atualizar.change_tipo(novo_tipo);
+    veiculo_a_atualizar.change_placa(nova_placa);
+    veiculo_a_atualizar.change_capacidade(nova_capacidade);
+
+    arquivo.seekp(pos * sizeof(Veiculo));
+    arquivo.write(reinterpret_cast<const char*>(&veiculo_a_atualizar), sizeof(Veiculo));
+
+    cout << "Veículo atualizado com sucesso!" << endl;
+    return true;
+}
+
+vector<Veiculo> GerenciadorVeiculos::get_todos_veiculos() {
+    vector<Veiculo> veiculos_ativos;
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        return veiculos_ativos;
+    }
+
+    Veiculo veiculo_lido;
+    while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
+        if (veiculo_lido.is_ativo()) {
+            veiculos_ativos.push_back(veiculo_lido);
+        }
+    }
+
+    return veiculos_ativos;
+}
+
+Veiculo GerenciadorVeiculos::get_veiculo_by_placa(const string& placa) {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    Veiculo veiculo_lido;
+    if (arquivo) {
+        while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
+            if (veiculo_lido.is_ativo() && veiculo_lido.get_placa() == placa) {
+                return veiculo_lido;
+            }
+        }
+    }
+    return Veiculo(); // Retorna veículo inativo se não encontrado
+}
 
 void GerenciadorVeiculos::cadastrar_veiculo(vector<Local>& locais_disponiveis) {
     cout << "\n--- Cadastro de Novo Veiculo ---" << endl;

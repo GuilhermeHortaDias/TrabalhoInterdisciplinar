@@ -1,11 +1,131 @@
-#include "cadastro_pedido.h"
-#include "../headers/cadastro_local.h"
+#include "../headers/cadastro_pedido.h"
 #include <iostream>
+#include <fstream>
 #include <vector>
-#include <string>
-#include <algorithm>
+#include <cstring>
 
 using namespace std;
+
+GerenciadorPedidos::GerenciadorPedidos() {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        ofstream novoArquivo(nomeArquivo, ios::binary);
+        novoArquivo.close();
+    }
+}
+
+int GerenciadorPedidos::encontrar_pos_pedido(int id) {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) return -1;
+
+    Pedido pedido_lido;
+    int pos = 0;
+    while (arquivo.read(reinterpret_cast<char*>(&pedido_lido), sizeof(Pedido))) {
+        if (pedido_lido.is_ativo() && pedido_lido.get_id() == id) {
+            return pos;
+        }
+        pos++;
+    }
+    return -1;
+}
+
+int GerenciadorPedidos::get_next_id() {
+    ifstream arquivo(nomeArquivo, ios::binary | ios::ate);
+    if (!arquivo || arquivo.tellg() == 0) {
+        return 1; // Começa do 1 se o arquivo estiver vazio ou não existir
+    }
+    // Pega a posição do último registro
+    arquivo.seekg(long(arquivo.tellg()) - long(sizeof(Pedido)));
+    Pedido ultimo_pedido;
+    arquivo.read(reinterpret_cast<char*>(&ultimo_pedido), sizeof(Pedido));
+    return ultimo_pedido.get_id() + 1;
+}
+
+bool GerenciadorPedidos::criar_pedido(const string& item, int quantidade, float valor, const string& local_entrega, const string& local_retirada) {
+    int novo_id = get_next_id();
+
+    Pedido novo_pedido(novo_id, item, quantidade, valor, local_entrega, local_retirada);
+    ofstream arquivo(nomeArquivo, ios::binary | ios::app);
+    if (!arquivo) {
+        cout << "Erro ao abrir o arquivo para escrita." << endl;
+        return false;
+    }
+
+    arquivo.write(reinterpret_cast<const char*>(&novo_pedido), sizeof(Pedido));
+    cout << "Pedido criado com sucesso! ID: " << novo_id << endl;
+    return true;
+}
+
+bool GerenciadorPedidos::deletar_pedido(int id) {
+    int pos = encontrar_pos_pedido(id);
+    if (pos == -1) {
+        cout << "Erro: Pedido não encontrado." << endl;
+        return false;
+    }
+
+    fstream arquivo(nomeArquivo, ios::binary | ios::in | ios::out);
+    if (!arquivo) {
+        cout << "Erro ao abrir o arquivo." << endl;
+        return false;
+    }
+
+    arquivo.seekg(pos * sizeof(Pedido));
+    Pedido pedido_a_deletar;
+    arquivo.read(reinterpret_cast<char*>(&pedido_a_deletar), sizeof(Pedido));
+
+    pedido_a_deletar.desativar();
+
+    arquivo.seekp(pos * sizeof(Pedido));
+    arquivo.write(reinterpret_cast<const char*>(&pedido_a_deletar), sizeof(Pedido));
+
+    cout << "Pedido ID " << id << " deletado com sucesso!" << endl;
+    return true;
+}
+
+void GerenciadorPedidos::listar_pedidos() {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        cout << "Nenhum pedido cadastrado." << endl;
+        return;
+    }
+
+    Pedido pedido_lido;
+    bool encontrou = false;
+    cout << "\n--- Lista de Pedidos ---" << endl;
+    while (arquivo.read(reinterpret_cast<char*>(&pedido_lido), sizeof(Pedido))) {
+        if (pedido_lido.is_ativo()) {
+            cout << "ID: " << pedido_lido.get_id()
+                 << ", Item: " << pedido_lido.get_item()
+                 << ", Qtd: " << pedido_lido.get_quantidade()
+                 << ", Valor: " << pedido_lido.get_valor()
+                 << ", Entrega: " << pedido_lido.get_local_entrega()
+                 << ", Retirada: " << pedido_lido.get_local_retirada() << endl;
+            encontrou = true;
+        }
+    }
+
+    if (!encontrou) {
+        cout << "Nenhum pedido ativo cadastrado." << endl;
+    }
+    cout << "------------------------" << endl;
+}
+
+vector<Pedido> GerenciadorPedidos::get_todos_pedidos() {
+    vector<Pedido> pedidos_ativos;
+    ifstream arquivo(nomeArquivo, ios::binary);
+    if (!arquivo) {
+        return pedidos_ativos;
+    }
+
+    Pedido pedido_lido;
+    while (arquivo.read(reinterpret_cast<char*>(&pedido_lido), sizeof(Pedido))) {
+        if (pedido_lido.is_ativo()) {
+            pedidos_ativos.push_back(pedido_lido);
+        }
+    }
+
+    return pedidos_ativos;
+}
 
 Pedido::Pedido(int id, const string &origem, const string &destino, float peso)
     : id(id), origem(origem), destino(destino), peso(peso) {}

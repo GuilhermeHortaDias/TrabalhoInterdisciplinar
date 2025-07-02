@@ -1,38 +1,47 @@
 #pragma once
 
-#include <vector>
 #include <string>
-#include <algorithm>
+#include "cadastro_local.h" // Para usar GerenciadorLocais
+
 using namespace std;
+
+const int MAX_NOME_LOCAL_PEDIDO = 50;
 
 class Pedido
 {
 private:
     int id;
-    string origem;
-    string destino;
+    char origem[MAX_NOME_LOCAL_PEDIDO];
+    char destino[MAX_NOME_LOCAL_PEDIDO];
     float peso;
+    bool ativo;
 
 public:
-    Pedido(int id, const string &origem, const string &destino, float peso);
-    int get_id() const;
-    string get_origem() const;
-    string get_destino() const;
-    float get_peso() const;
+    Pedido();
+    Pedido(int id, const char* origem, const char* destino, float peso);
 
-    void set_origem(const string &novaOrigem);
-    void set_destino(const string &novoDestino);
+    int get_id() const;
+    const char* get_origem() const;
+    const char* get_destino() const;
+    float get_peso() const;
+    bool is_ativo() const;
+
+    void set_origem(const char* novaOrigem);
+    void set_destino(const char* novoDestino);
     void set_peso(float novoPeso);
+    void desativar();
 };
 
 class GerenciadorPedidos
 {
 private:
-    bool localExiste(const vector<string> &locais, const string &local) const;
+    const string nomeArquivo = "pedidos.bin";
+    int obterProximoId();
 
 public:
-    void cadastrarPedido(vector<Pedido> &pedidos, const vector<string> &locais);
-    void listarPedidos(const vector<Pedido> &pedidos) const;
-    void excluirPedido(vector<Pedido> &pedidos);
-    void editarPedido(vector<Pedido> &pedidos, const vector<string> &locais);
+    GerenciadorPedidos();
+    void cadastrarPedido(GerenciadorLocais& gerenciadorLocais);
+    void listarPedidos() const;
+    void excluirPedido();
+    void editarPedido(GerenciadorLocais& gerenciadorLocais);
 };
