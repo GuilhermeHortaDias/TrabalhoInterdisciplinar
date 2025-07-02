@@ -185,8 +185,8 @@ void exibirMenu() {
     cout << "0. Sair\n";
     cout << "Escolha uma opcao: ";
 }
-
-int main() {
+/*
+int main() {  
     setlocale(LC_ALL, "Portuguese");
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
@@ -281,4 +281,4 @@ int main() {
     }
 
     return 0;
-}
+} */
