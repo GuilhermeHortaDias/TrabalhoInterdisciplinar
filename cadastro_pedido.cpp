@@ -1,4 +1,5 @@
 #include "cadastro_pedido.h"
+#include "cadastro_local.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -23,7 +24,7 @@ bool GerenciadorPedidos::localExiste(const vector<string> &locais, const string 
     return find(locais.begin(), locais.end(), local) != locais.end();
 }
 
-void GerenciadorPedidos::cadastrarPedido(vector<Pedido> &pedidos, const vector<string> &locais)
+void GerenciadorPedidos::cadastrarPedido(vector<Pedido> &pedidos, GerenciadorLocais &gerenciadorLocais)
 {
     static int contadorId = 1;
 
@@ -39,13 +40,16 @@ void GerenciadorPedidos::cadastrarPedido(vector<Pedido> &pedidos, const vector<s
     cout << "Digite o peso (em kg): ";
     cin >> peso;
 
-    if (!localExiste(locais, origem))
-    {
+    vector<string> locaisValidos;
+    for (const auto &local : gerenciadorLocais.locais) {
+        locaisValidos.push_back(local.get_nome());
+    }
+
+    if (!localExiste(locaisValidos, origem)) {
         cout << "Erro: A origem \"" << origem << "\" nao existe." << endl;
         return;
     }
-    if (!localExiste(locais, destino))
-    {
+    if (!localExiste(locaisValidos, destino)) {
         cout << "Erro: O destino \"" << destino << "\" nao existe." << endl;
         return;
     }
@@ -58,15 +62,13 @@ void GerenciadorPedidos::cadastrarPedido(vector<Pedido> &pedidos, const vector<s
 
 void GerenciadorPedidos::listarPedidos(const vector<Pedido> &pedidos) const
 {
-    if (pedidos.empty())
-    {
+    if (pedidos.empty()) {
         cout << "Nenhum pedido cadastrado." << endl;
         return;
     }
 
     cout << "\nListagem de Pedidos:\n" << endl;
-    for (const auto &pedido : pedidos)
-    {
+    for (const auto &pedido : pedidos) {
         cout << "\nID: " << pedido.get_id()
              << "\n Origem: " << pedido.get_origem()
              << "\n Destino: " << pedido.get_destino()
@@ -76,8 +78,7 @@ void GerenciadorPedidos::listarPedidos(const vector<Pedido> &pedidos) const
 
 void GerenciadorPedidos::excluirPedido(vector<Pedido> &pedidos)
 {
-    if (pedidos.empty())
-    {
+    if (pedidos.empty()) {
         cout << "Nenhum pedido cadastrado para excluir." << endl;
         return;
     }
@@ -90,21 +91,17 @@ void GerenciadorPedidos::excluirPedido(vector<Pedido> &pedidos)
         return p.get_id() == id;
     });
 
-    if (it == pedidos.end())
-    {
+    if (it == pedidos.end()) {
         cout << "Pedido com ID " << id << " nao encontrado." << endl;
-    }
-    else
-    {
+    } else {
         pedidos.erase(it, pedidos.end());
         cout << "Pedido com ID " << id << " excluido com sucesso!" << endl;
     }
 }
 
-void GerenciadorPedidos::editarPedido(vector<Pedido> &pedidos, const vector<string> &locais)
+void GerenciadorPedidos::editarPedido(vector<Pedido> &pedidos, GerenciadorLocais &gerenciadorLocais)
 {
-    if (pedidos.empty())
-    {
+    if (pedidos.empty()) {
         cout << "Nenhum pedido cadastrado para editar." << endl;
         return;
     }
@@ -113,10 +110,8 @@ void GerenciadorPedidos::editarPedido(vector<Pedido> &pedidos, const vector<stri
     cout << "Digite o ID do pedido que deseja editar: ";
     cin >> id;
 
-    for (auto &pedido : pedidos)
-    {
-        if (pedido.get_id() == id)
-        {
+    for (auto &pedido : pedidos) {
+        if (pedido.get_id() == id) {
             string novaOrigem, novoDestino;
             float novoPeso;
 
@@ -129,13 +124,16 @@ void GerenciadorPedidos::editarPedido(vector<Pedido> &pedidos, const vector<stri
             cout << "Novo peso (atual: " << pedido.get_peso() << " kg): ";
             cin >> novoPeso;
 
-            if (!localExiste(locais, novaOrigem))
-            {
+            vector<string> locaisValidos;
+            for (const auto &local : gerenciadorLocais.locais) {
+                locaisValidos.push_back(local.get_nome());
+            }
+
+            if (!localExiste(locaisValidos, novaOrigem)) {
                 cout << "Erro: A nova origem \"" << novaOrigem << "\" nao existe." << endl;
                 return;
             }
-            if (!localExiste(locais, novoDestino))
-            {
+            if (!localExiste(locaisValidos, novoDestino)) {
                 cout << "Erro: O novo destino \"" << novoDestino << "\" nao existe." << endl;
                 return;
             }
@@ -150,4 +148,48 @@ void GerenciadorPedidos::editarPedido(vector<Pedido> &pedidos, const vector<stri
     }
 
     cout << "Pedido com ID " << id << " nao encontrado." << endl;
+}
+
+int main()
+{
+    GerenciadorLocais gerenciadorLocais;
+    vector<Pedido> pedidos;
+    GerenciadorPedidos gerenciador;
+
+    int opcao;
+
+    while (true)
+    {
+        cout << "\nMenu:\n";
+        cout << "1. Cadastrar Pedido" << endl;
+        cout << "2. Listar Pedidos" << endl;
+        cout << "3. Editar Pedido" << endl;
+        cout << "4. Excluir Pedido" << endl;
+        cout << "5. Sair\n";
+        cout << "Escolha uma opcao: ";
+        cin >> opcao;
+
+        switch (opcao)
+        {
+        case 1:
+            gerenciador.cadastrarPedido(pedidos, locais);
+            break;
+        case 2:
+            gerenciador.listarPedidos(pedidos);
+            break;
+        case 3:
+            gerenciador.editarPedido(pedidos, locais);
+            break;
+        case 4:
+            gerenciador.excluirPedido(pedidos);
+            break;
+        case 5:
+            cout << "Encerrando o sistema... " << endl;
+            return 0;
+        default:
+            cout << "Opcao invalida. Tente novamente." << endl;
+        }
+    }
+
+    return 0;
 }
