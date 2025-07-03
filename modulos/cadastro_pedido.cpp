@@ -7,12 +7,13 @@
 
 using namespace std;
 
-// Implementação dos métodos da classe Pedido
+// inicialização das strings
 Pedido::Pedido() : id(0), peso(0.0f), ativo(false) {
     origem[0] = '\0';
     destino[0] = '\0';
 }
 
+// copia as strings para os arrays
 Pedido::Pedido(int id, const string& origem_str, const string& destino_str, float peso) 
     : id(id), peso(peso), ativo(true) {
     strncpy(this->origem, origem_str.c_str(), MAX_NOME_LOCAL_PEDIDO - 1);
@@ -21,12 +22,14 @@ Pedido::Pedido(int id, const string& origem_str, const string& destino_str, floa
     this->destino[MAX_NOME_LOCAL_PEDIDO - 1] = '\0';
 }
 
+
 int Pedido::get_id() const { return id; }
 string Pedido::get_origem() const { return string(origem); }
 string Pedido::get_destino() const { return string(destino); }
 float Pedido::get_peso() const { return peso; }
 bool Pedido::is_ativo() const { return ativo; }
 
+//acessa a parte privada para alterar
 void Pedido::set_origem(const string& nova_origem) {
     strncpy(this->origem, nova_origem.c_str(), MAX_NOME_LOCAL_PEDIDO - 1);
     this->origem[MAX_NOME_LOCAL_PEDIDO - 1] = '\0';
@@ -40,7 +43,7 @@ void Pedido::set_destino(const string& novo_destino) {
 void Pedido::set_peso(float novo_peso) { this->peso = novo_peso; }
 void Pedido::desativar() { this->ativo = false; }
 
-// Implementação dos métodos da classe GerenciadorPedidos
+// acessar os arquivos binarios
 GerenciadorPedidos::GerenciadorPedidos() {
     ifstream arquivo(nomeArquivo, ios::binary);
     if (!arquivo) {
@@ -49,10 +52,11 @@ GerenciadorPedidos::GerenciadorPedidos() {
     }
 }
 
+// manda o proximo id para fazer mais pedidos
 int GerenciadorPedidos::get_next_id() {
     ifstream arquivo(nomeArquivo, ios::binary | ios::ate);
     if (!arquivo || arquivo.tellg() == 0) {
-        return 1; // Começa do 1 se o arquivo estiver vazio
+        return 1;
     }
     arquivo.seekg(-static_cast<long>(sizeof(Pedido)), ios::end);
     Pedido ultimo_pedido;
@@ -60,6 +64,7 @@ int GerenciadorPedidos::get_next_id() {
     return ultimo_pedido.get_id() + 1;
 }
 
+// acha o pedido que a pessoa quer no arquivo
 int GerenciadorPedidos::encontrar_pos_pedido(int id) {
     ifstream arquivo(nomeArquivo, ios::binary);
     if (!arquivo) return -1;
@@ -75,6 +80,7 @@ int GerenciadorPedidos::encontrar_pos_pedido(int id) {
     return -1;
 }
 
+// cria um pedido novo e coloca ele no aquivo
 bool GerenciadorPedidos::criar_pedido(const string& origem, const string& destino, float peso) {
     int novo_id = get_next_id();
     Pedido novo_pedido(novo_id, origem, destino, peso);
@@ -90,6 +96,7 @@ bool GerenciadorPedidos::criar_pedido(const string& origem, const string& destin
     return true;
 }
 
+// ele apaga um pedido que a pessoa quer
 bool GerenciadorPedidos::deletar_pedido(int id) {
     int pos = encontrar_pos_pedido(id);
     if (pos == -1) {
@@ -116,6 +123,7 @@ bool GerenciadorPedidos::deletar_pedido(int id) {
     return true;
 }
 
+// mostra todos os pedidos que foram feitos
 void GerenciadorPedidos::listar_pedidos() {
     ifstream arquivo(nomeArquivo, ios::binary);
     if (!arquivo) {
@@ -142,6 +150,7 @@ void GerenciadorPedidos::listar_pedidos() {
     cout << "------------------------" << endl;
 }
 
+// ele troca os dados anteriores e adiciona um outro que a pessoa quiser
 bool GerenciadorPedidos::atualizar_pedido(int id, const string& nova_origem, const string& novo_destino, float novo_peso) {
     int pos = encontrar_pos_pedido(id);
     if (pos == -1) {
@@ -170,6 +179,7 @@ bool GerenciadorPedidos::atualizar_pedido(int id, const string& nova_origem, con
     return true;
 }
 
+//retorna o vetor com os pedidos das pessoas
 vector<Pedido> GerenciadorPedidos::get_todos_pedidos() {
     ifstream arquivo(nomeArquivo, ios::binary);
     vector<Pedido> pedidos;
@@ -186,6 +196,7 @@ vector<Pedido> GerenciadorPedidos::get_todos_pedidos() {
     return pedidos;
 }
 
+// ao inves de mostrar tudo, mostra um pedido especifico pelo ID
 Pedido GerenciadorPedidos::get_pedido_by_id(int id) {
     ifstream arquivo(nomeArquivo, ios::binary);
     Pedido pedido_lido;
@@ -196,5 +207,5 @@ Pedido GerenciadorPedidos::get_pedido_by_id(int id) {
             }
         }
     }
-    return Pedido(); // Retorna um pedido "vazio" se não encontrar
+    return Pedido();
 }

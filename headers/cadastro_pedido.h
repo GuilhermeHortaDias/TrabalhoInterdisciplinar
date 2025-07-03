@@ -2,12 +2,13 @@
 
 #include <string>
 #include <vector>
-#include "cadastro_local.h" // Para validação de locais
+#include "cadastro_local.h"
 
 using namespace std;
 
 const int MAX_NOME_LOCAL_PEDIDO = 50;
 
+//classe de cada pedido sozinho
 class Pedido {
 private:
     int id;
@@ -32,6 +33,7 @@ public:
     void desativar();
 };
 
+//classe de todos os pedidos para gerenciar eles
 class GerenciadorPedidos {
 private:
     const string nomeArquivo = "pedidos.dat";
