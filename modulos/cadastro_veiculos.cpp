@@ -1,31 +1,47 @@
+#include "../headers/cadastro_veiculos.h"
 #include <iostream>
+#include <fstream>
+#include <cstring>
+#include <vector>
 #include <limits>
 #include <algorithm>
-#include <locale.h>
-#include <windows.h>
-#include "../headers/cadastro_veiculos.h"
-#include <fstream>
-#include <vector>
-#include <cstring>
 
 using namespace std;
 
-Veiculo::Veiculo(string placa, string modelo, string status, string localAtual) {
-    this->placa = placa;
-    this->modelo = modelo;
-    this->status = status;
-    this->localAtual = localAtual;
+// Implementação dos métodos da classe Veiculo
+Veiculo::Veiculo() : capacidade(0), ativo(false) {
+    tipo[0] = '\0';
+    placa[0] = '\0';
 }
 
-string Veiculo::get_placa() const { return this->placa; }
-string Veiculo::get_modelo() const { return this->modelo; }
-string Veiculo::get_status() const { return this->status; }
-string Veiculo::get_localAtual() const { return this->localAtual; }
+Veiculo::Veiculo(const string& tipo_str, const string& placa_str, float capacidade) {
+    strncpy(this->tipo, tipo_str.c_str(), TAM_TIPO_VEICULO - 1);
+    this->tipo[TAM_TIPO_VEICULO - 1] = '\0';
+    strncpy(this->placa, placa_str.c_str(), TAM_PLACA_VEICULO - 1);
+    this->placa[TAM_PLACA_VEICULO - 1] = '\0';
+    this->capacidade = capacidade;
+    this->ativo = true;
+}
 
-void Veiculo::change_modelo(string novo_modelo) { this->modelo = novo_modelo; }
-void Veiculo::change_status(string novo_status) { this->status = novo_status; }
-void Veiculo::change_localAtual(string novo_local) { this->localAtual = novo_local; }
+string Veiculo::get_tipo() const { return string(tipo); }
+string Veiculo::get_placa() const { return string(placa); }
+float Veiculo::get_capacidade() const { return capacidade; }
+bool Veiculo::is_ativo() const { return ativo; }
 
+void Veiculo::change_tipo(const string& novo_tipo) {
+    strncpy(this->tipo, novo_tipo.c_str(), TAM_TIPO_VEICULO - 1);
+    this->tipo[TAM_TIPO_VEICULO - 1] = '\0';
+}
+
+void Veiculo::change_placa(const string& nova_placa) {
+    strncpy(this->placa, nova_placa.c_str(), TAM_PLACA_VEICULO - 1);
+    this->placa[TAM_PLACA_VEICULO - 1] = '\0';
+}
+
+void Veiculo::change_capacidade(float nova_capacidade) { this->capacidade = nova_capacidade; }
+void Veiculo::desativar() { this->ativo = false; }
+
+// Implementação dos métodos da classe GerenciadorVeiculos
 GerenciadorVeiculos::GerenciadorVeiculos() {
     ifstream arquivo(nomeArquivo, ios::binary);
     if (!arquivo) {
@@ -34,14 +50,14 @@ GerenciadorVeiculos::GerenciadorVeiculos() {
     }
 }
 
-int GerenciadorVeiculos::encontrar_pos_veiculo(const string& placa) {
+int GerenciadorVeiculos::encontrar_pos_veiculo(const string& placa_procurada) {
     ifstream arquivo(nomeArquivo, ios::binary);
     if (!arquivo) return -1;
 
     Veiculo veiculo_lido;
     int pos = 0;
     while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
-        if (veiculo_lido.is_ativo() && veiculo_lido.get_placa() == placa) {
+        if (veiculo_lido.is_ativo() && veiculo_lido.get_placa() == placa_procurada) {
             return pos;
         }
         pos++;
@@ -101,19 +117,19 @@ void GerenciadorVeiculos::listar_veiculos() {
     }
 
     Veiculo veiculo_lido;
-    bool encontrou = false;
-    cout << "\n--- Lista de Veículos ---" << endl;
+    bool encontrou_ativo = false;
+    cout << "--- Lista de Veículos ---" << endl;
     while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
         if (veiculo_lido.is_ativo()) {
-            cout << "Tipo: " << veiculo_lido.get_tipo()
-                 << ", Placa: " << veiculo_lido.get_placa()
-                 << ", Capacidade: " << veiculo_lido.get_capacidade() << endl;
-            encontrou = true;
+            cout << "Placa: " << veiculo_lido.get_placa()
+                 << ", Tipo: " << veiculo_lido.get_tipo()
+                 << ", Capacidade: " << veiculo_lido.get_capacidade() << " kg" << endl;
+            encontrou_ativo = true;
         }
     }
 
-    if (!encontrou) {
-        cout << "Nenhum veículo ativo cadastrado." << endl;
+    if (!encontrou_ativo) {
+        cout << "Nenhum veículo ativo encontrado." << endl;
     }
     cout << "-------------------------" << endl;
 }
@@ -121,13 +137,13 @@ void GerenciadorVeiculos::listar_veiculos() {
 bool GerenciadorVeiculos::atualizar_veiculo(const string& placa_atual, const string& novo_tipo, const string& nova_placa, float nova_capacidade) {
     int pos = encontrar_pos_veiculo(placa_atual);
     if (pos == -1) {
-        cout << "Erro: Veículo a ser atualizado não encontrado." << endl;
+        cout << "Erro: Veículo com a placa " << placa_atual << " não encontrado." << endl;
         return false;
     }
 
-    int pos_novo = encontrar_pos_veiculo(nova_placa);
-    if (pos_novo != -1 && pos_novo != pos) {
-        cout << "Erro: Já existe outro veículo com a nova placa." << endl;
+    // Se a placa for alterada, verificar se a nova já existe
+    if (placa_atual != nova_placa && encontrar_pos_veiculo(nova_placa) != -1) {
+        cout << "Erro: Já existe um veículo com a nova placa " << nova_placa << "." << endl;
         return false;
     }
 
@@ -153,20 +169,19 @@ bool GerenciadorVeiculos::atualizar_veiculo(const string& placa_atual, const str
 }
 
 vector<Veiculo> GerenciadorVeiculos::get_todos_veiculos() {
-    vector<Veiculo> veiculos_ativos;
     ifstream arquivo(nomeArquivo, ios::binary);
+    vector<Veiculo> veiculos;
     if (!arquivo) {
-        return veiculos_ativos;
+        return veiculos;
     }
 
     Veiculo veiculo_lido;
     while (arquivo.read(reinterpret_cast<char*>(&veiculo_lido), sizeof(Veiculo))) {
         if (veiculo_lido.is_ativo()) {
-            veiculos_ativos.push_back(veiculo_lido);
+            veiculos.push_back(veiculo_lido);
         }
     }
-
-    return veiculos_ativos;
+    return veiculos;
 }
 
 Veiculo GerenciadorVeiculos::get_veiculo_by_placa(const string& placa) {
@@ -179,149 +194,6 @@ Veiculo GerenciadorVeiculos::get_veiculo_by_placa(const string& placa) {
             }
         }
     }
-    return Veiculo(); // Retorna veículo inativo se não encontrado
-}
-
-void GerenciadorVeiculos::cadastrar_veiculo(vector<Local>& locais_disponiveis) {
-    cout << "\n--- Cadastro de Novo Veiculo ---" << endl;
-    if (locais_disponiveis.empty()) {
-        cout << "ERRO: E necessario cadastrar um local antes de um veiculo." << endl;
-        return;
-    }
-
-    string placa, modelo, status, localAtual;
-
-    cout << "Digite a placa: ";
-    getline(cin, placa);
-
-    for (int i = 0; i < veiculos.size(); i++) {
-        if (veiculos[i].get_placa() == placa) {
-            cout << "ERRO: Veiculo com esta placa ja existe." << endl;
-            return;
-        }
-    }
-
-    cout << "Digite o modelo: ";
-    getline(cin, modelo);
-    
-    while (true) {
-        cout << "Digite o status (Disponivel/Ocupado): ";
-        getline(cin, status);
-        string status_lower = status;
-        transform(status_lower.begin(), status_lower.end(), status_lower.begin(), ::tolower);
-
-        if (status_lower == "disponivel") {
-            status = "Disponivel";
-            break;
-        } else if (status_lower == "ocupado") {
-            status = "Ocupado";
-            break;
-        } else {
-            cout << "ERRO: Status invalido. Tente novamente." << endl;
-        }
-    }
-
-    cout << "\nLocais disponiveis:" << endl;
-    for(int i = 0; i < locais_disponiveis.size(); i++) {
-        cout << "- " << locais_disponiveis[i].get_nome() << endl;
-    }
-
-    bool localValido = false;
-    while (!localValido) {
-        cout << "Digite o local atual (deve ser um da lista): ";
-        getline(cin, localAtual);
-        for (int i = 0; i < locais_disponiveis.size(); i++) {
-            if (locais_disponiveis[i].get_nome() == localAtual) {
-                localValido = true;
-                break;
-            }
-        }
-        if (!localValido) {
-            cout << "ERRO: Local nao encontrado. Tente novamente." << endl;
-        }
-    }
-
-    Veiculo novoVeiculo(placa, modelo, status, localAtual);
-    veiculos.push_back(novoVeiculo);
-    cout << "\nVeiculo cadastrado com sucesso!" << endl;
-}
-
-void GerenciadorVeiculos::listar_veiculos() const {
-    cout << "\n--- Lista de Veiculos Cadastrados ---" << endl;
-    if (veiculos.empty()) {
-        cout << "Nenhum veiculo cadastrado no sistema." << endl;
-        return;
-    }
-    for (int i = 0; i < veiculos.size(); i++) {
-        cout << "Placa: " << veiculos[i].get_placa()
-             << " | Modelo: " << veiculos[i].get_modelo()
-             << " | Status: " << veiculos[i].get_status()
-             << " | Local: " << veiculos[i].get_localAtual() << endl;
-    }
-}
-
-void GerenciadorVeiculos::atualizar_veiculo(string placa, vector<Local>& locais_disponiveis) {
-    int indice_veiculo = -1;
-    for (int i = 0; i < veiculos.size(); i++) {
-        if (veiculos[i].get_placa() == placa) {
-            indice_veiculo = i;
-            break;
-        }
-    }
-
-    if (indice_veiculo == -1) {
-        cout << "ERRO: Veiculo com a placa '" << placa << "' nao foi encontrado." << endl;
-        return;
-    }
-    
-    string novo_modelo, novo_status, novo_local;
-
-    cout << "Digite o novo modelo: ";
-    getline(cin, novo_modelo);
-
-    while (true) {
-        cout << "Digite o novo status (Disponivel/Ocupado): ";
-        getline(cin, novo_status);
-        string status_lower = novo_status;
-        transform(status_lower.begin(), status_lower.end(), status_lower.begin(), ::tolower);
-        if (status_lower == "disponivel") { novo_status = "Disponivel"; break; }
-        else if (status_lower == "ocupado") { novo_status = "Ocupado"; break; }
-        else { cout << "ERRO: Status invalido." << endl; }
-    }
-
-    cout << "\nLocais disponiveis:" << endl;
-    for(int i = 0; i < locais_disponiveis.size(); i++) {
-        cout << "- " << locais_disponiveis[i].get_nome() << endl;
-    }
-
-    bool localValido = false;
-    while (!localValido) {
-        cout << "Digite o novo local (deve ser um da lista): ";
-        getline(cin, novo_local);
-        for (int i = 0; i < locais_disponiveis.size(); i++) {
-            if (locais_disponiveis[i].get_nome() == novo_local) {
-                localValido = true;
-                break;
-            }
-        }
-        if (!localValido) {
-            cout << "ERRO: Local nao encontrado. Tente novamente." << endl;
-        }
-    }
-
-    veiculos[indice_veiculo].change_modelo(novo_modelo);
-    veiculos[indice_veiculo].change_status(novo_status);
-    veiculos[indice_veiculo].change_localAtual(novo_local);
-    cout << "Veiculo atualizado com sucesso!" << endl;
-}
-
-void GerenciadorVeiculos::deletar_veiculo(string placa) {
-    for (int i = 0; i < veiculos.size(); i++) {
-        if (veiculos[i].get_placa() == placa) {
-            veiculos.erase(veiculos.begin() + i);
-            cout << "Veiculo deletado com sucesso!" << endl;
-            return;
-        }
-    }
-    cout << "ERRO: Veiculo com a placa '" << placa << "' nao foi encontrado." << endl;
+    // Retorna um veículo "vazio" se não encontrar
+    return Veiculo();
 }
