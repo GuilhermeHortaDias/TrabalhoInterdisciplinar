@@ -100,12 +100,19 @@ void GerenciadorRotas::gerar_rotas_otimizadas() {
 
             for (const auto& pedido : pedidos) {
                 if (!pedido_atribuido[pedido.get_id()] && pedido.get_peso() <= capacidade_restante) {
-                    Local destino_pedido = encontrar_local(pedido.get_destino(), locais);
-                    if (destino_pedido.is_ativo()) {
-                        float d = calcular_distancia(local_atual, destino_pedido);
-                        if (d != -1.0f && (melhor_pedido_id == -1 || d < menor_distancia)) {
-                            menor_distancia = d;
-                            melhor_pedido_id = pedido.get_id();
+                    Local ponto_coleta = encontrar_local(pedido.get_origem(), locais);
+                    Local ponto_entrega = encontrar_local(pedido.get_destino(), locais);
+
+                    if (ponto_coleta.is_ativo() && ponto_entrega.is_ativo()) {
+                        float dist_ate_coleta = calcular_distancia(local_atual, ponto_coleta);
+                        float dist_coleta_entrega = calcular_distancia(ponto_coleta, ponto_entrega);
+
+                        if (dist_ate_coleta >= 0 && dist_coleta_entrega >= 0) {
+                            float dist_total_viagem = dist_ate_coleta + dist_coleta_entrega;
+                            if (melhor_pedido_id == -1 || dist_total_viagem < menor_distancia) {
+                                menor_distancia = dist_total_viagem;
+                                melhor_pedido_id = pedido.get_id();
+                            }
                         }
                     }
                 }
@@ -150,20 +157,40 @@ void GerenciadorRotas::listar_rotas_com_detalhes() {
             encontrou = true;
             Veiculo v = gerenciadorVeiculos.get_veiculo_by_placa(rota_lida.get_placa_veiculo());
             cout << "\nVeículo: " << v.get_placa() << " (" << v.get_tipo() << ")" << endl;
-            cout << "  Rota: Garagem";
+            
+            Local local_anterior = gerenciadorLocais.get_local_by_nome("Garagem");
+            cout << "  Rota: " << local_anterior.get_nome();
 
             const int* ids = rota_lida.get_ids_pedidos();
             int num_pedidos = rota_lida.get_num_pedidos();
             float peso_total = 0;
+            float distancia_total = 0;
 
             for (int i = 0; i < num_pedidos; ++i) {
                 Pedido p = gerenciadorPedidos.get_pedido_by_id(ids[i]);
                 if (p.is_ativo()) {
-                    cout << " -> " << p.get_destino();
-                    peso_total += p.get_peso();
+                    Local coleta = gerenciadorLocais.get_local_by_nome(p.get_origem());
+                    Local entrega = gerenciadorLocais.get_local_by_nome(p.get_destino());
+
+                    if (coleta.is_ativo() && entrega.is_ativo()) {
+                        if (coleta.get_nome() != local_anterior.get_nome()) {
+                            distancia_total += calcular_distancia(local_anterior, coleta);
+                            cout << " -> " << coleta.get_nome() << " (Coleta P:" << p.get_id() << ")";
+                        }
+                        distancia_total += calcular_distancia(coleta, entrega);
+                        cout << " -> " << entrega.get_nome() << " (Entrega P:" << p.get_id() << ")";
+                        local_anterior = entrega;
+                        peso_total += p.get_peso();
+                    }
                 }
             }
+
+            Local garagem = gerenciadorLocais.get_local_by_nome("Garagem");
+            if (garagem.is_ativo() && local_anterior.is_ativo()) {
+                 distancia_total += calcular_distancia(local_anterior, garagem);
+            }
             cout << " -> Garagem (Retorno)" << endl;
+            cout << "  Distância Total Estimada: " << distancia_total << " unidades" << endl;
             cout << "  Carga Total: " << peso_total << " kg (Capacidade: " << v.get_capacidade() << " kg)" << endl;
         }
     }

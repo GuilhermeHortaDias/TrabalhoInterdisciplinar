@@ -35,11 +35,18 @@ void Local::desativar() { this->ativo = false; }
 
 // Implementações da classe GerenciadorLocais
 GerenciadorLocais::GerenciadorLocais() {
-    fstream arquivo(nomeArquivo, ios::binary | ios::in | ios::out | ios::app);
+    // Assegura que o arquivo exista para leitura e escrita
+    fstream arquivo(nomeArquivo, ios::binary | ios::in | ios::out);
     if (!arquivo.is_open()) {
-        // Se o arquivo não existir, ele será criado vazio.
+        // Se não for possível abrir, tenta criar
         ofstream novoArquivo(nomeArquivo, ios::binary);
         novoArquivo.close();
+    }
+
+    // Garante que o local "Garagem" sempre exista
+    if (encontrar_pos_local("Garagem") == -1) {
+        cout << "INFO: Local padrão 'Garagem' não encontrado. Criando automaticamente em (0,0)." << endl;
+        criar_local("Garagem", 0, 0);
     }
 }
 
